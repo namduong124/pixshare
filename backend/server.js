@@ -37,6 +37,9 @@ mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('✅ Connected to MongoDB');
         // Chỉ chạy server khi đã kết nối Database thành công
+        app.listen(PORT, () => {
+            console.log(`🚀 Server is running on: http://localhost:${PORT}`);
+        });
     })
     .catch((err) => {
         console.error('❌ MongoDB Connection Error:', err.message);
@@ -46,8 +49,4 @@ mongoose.connect(MONGO_URI)
 process.on('unhandledRejection', (err) => {
     console.log('Error:', err.message);
     // Bạn có thể thêm code đóng server tại đây nếu muốn
-});
-
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on: http://localhost:${PORT}`);
 });
