@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+
+@theme {
+  /* Định nghĩa bảng màu theo đúng ảnh image_996d8e */
+  --color-pix-black: #0A0A0A;
+  --color-pix-dark: #161616;
+  --color-pix-gold: #C5A059;
+  --color-pix-gold-dim: rgba(197, 160, 89, 0.3);
+  --color-pix-blue: #2563EB;
+  --color-pix-gray: #737373;
+
+  
+  
+  --font-sans: "Inter", "Satoshi", "sans-serif";
+}
+
+@layer base {
+  body {
+    @apply bg-pix-black text-white antialiased;
+  }
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #C5A059; border-radius: 10px; }
