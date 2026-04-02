@@ -3,50 +3,59 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/users.js';
-// Import các routes (Chúng ta sẽ tạo các file này ở bước tiếp theo)
 import authRoutes from './routes/auth.js';
 import postRoutes from './routes/posts.js';
 
-// Cấu hình dotenv để đọc file .env
+// 1. Cấu hình dotenv (Chỉ dùng file .env khi ở máy local)
 dotenv.config();
 
 const app = express();
 
-// --- MIDDLEWARES ---
-// Cho phép các domain khác truy cập (Cần thiết để Frontend Vite gọi API)
-app.use(cors());
-// Cho phép Express đọc dữ liệu JSON từ body của request
+// 2. MIDDLEWARES 
+// Cực kỳ quan trọng: app.use(cors()) phải nằm TRÊN CÙNG để tránh lỗi CORS
+app.use(cors()); 
 app.use(express.json());
-// Cho phép Express đọc dữ liệu từ form (hữu ích cho việc upload)
 app.use(express.urlencoded({ extended: true }));
 
-// --- ROUTES ---
-app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/users', userRoutes);
-// Route kiểm tra server
-app.get('/', (req, res) => {
-    res.send('PixShare API is running... 🚀');
-});
-
-// --- DATABASE CONNECTION ---
+// 3. LẤY BIẾN MÔI TRƯỜNG
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 
+// Kiểm tra nhanh xem Render đã nhận được URI chưa (XEM TRONG TAB LOGS)
+if (!MONGO_URI) {
+    console.error("❌ LỖI: Biến MONGO_URI chưa được thiết lập trong Environment của Render!");
+} else {
+    console.log("📡 Đang khởi tạo kết nối tới MongoDB...");
+}
+
+// 4. ROUTES
+app.use('/api/auth', authRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/users', userRoutes);
+
+// Route mặc định để kiểm tra server có sống hay không
+app.get('/', (req, res) => {
+    res.status(200).send('PixShare API is running... 🚀');
+});
+
+// 5. KẾT NỐI DATABASE VÀ CHẠY SERVER
+mongoose.set('strictQuery', false); // Tránh cảnh báo của Mongoose
 mongoose.connect(MONGO_URI)
     .then(() => {
-        console.log('✅ Connected to MongoDB');
-        // Chỉ chạy server khi đã kết nối Database thành công
+        console.log('✅ Connected to MongoDB thành công!');
+        
+        // Chỉ chạy app.listen sau khi đã connect DB thành công
         app.listen(PORT, '0.0.0.0', () => {
-            console.log(`🚀 Server is running on: http://localhost:${PORT}`);
+            console.log(`🚀 Server đang chạy tại: https://your-app-name.onrender.com (Port: ${PORT})`);
         });
     })
     .catch((err) => {
-        console.error('❌ MongoDB Connection Error:', err.message);
+        console.error('❌ LỖI KẾT NỐI MONGODB:');
+        console.error('Chi tiết lỗi:', err.message);
+        console.log('👉 Mẹo: Hãy kiểm tra lại mật khẩu Database và Whitelist IP 0.0.0.0/0 trên Atlas.');
     });
 
-// Xử lý lỗi hệ thống để server không bị crash bất ngờ
+// 6. XỬ LÝ LỖI TOÀN CỤC
 process.on('unhandledRejection', (err) => {
-    console.log('Error:', err.message);
-    // Bạn có thể thêm code đóng server tại đây nếu muốn
+    console.log('Unhandled Rejection:', err.message);
 });
