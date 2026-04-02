@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API = axios.create({ baseURL: 'http://localhost:10000/api' });
+const API = axios.create({ baseURL: 'https://pixshare.onrender.com/api' });
 
 // 2. Interceptor: Tự động đính kèm Token vào TẤT CẢ các request
 API.interceptors.request.use((req) => {
