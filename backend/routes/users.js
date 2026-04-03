@@ -1,7 +1,7 @@
 import express from 'express';
 import { verifyToken } from '../middleware/auth.js';
 import upload, { uploadToCloudinary } from '../middleware/cloudinary.js';
-import { searchUsers, updateProfile } from '../controllers/users.js';
+import { getUserById, searchUsers, updateProfile } from '../controllers/users.js';
 
 const router = express.Router();
 router.get('/search', searchUsers);
@@ -15,5 +15,5 @@ router.patch(
   uploadToCloudinary,     
   updateProfile
 );
-
+router.get('/:id', getUserById);
 export default router;
