@@ -1,29 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Heart, MessageCircle, ChevronLeft, ChevronRight, MoreHorizontal, Trash2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // QUAN TRỌNG: Để chuyển trang
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function PostModal({ post, onClose }) {
     const { user: currentUser } = useAuth();
-    const navigate = useNavigate();
-    
-    // States
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState(post?.comments || []);
     const [likes, setLikes] = useState(post?.likes || []);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentImg, setCurrentImg] = useState(0);
-    const [showMenu, setShowMenu] = useState(false); // State để hiện bảng chọn delete
     
+    // --- PHẦN THÊM MỚI: Logic xoá ---
+    const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef();
+    const isAuthor = currentUser?._id === (post.user?._id || post.user);
 
-    // Logic đường dẫn và kiểm tra quyền
-    const authorId = post.user?._id || post.user;
-    const authorProfilePath = currentUser?._id === authorId ? '/profile' : `/profile/${authorId}`;
-    const isAuthor = currentUser?._id === authorId;
-
-    // Đóng menu khi click ra ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -33,6 +26,29 @@ export default function PostModal({ post, onClose }) {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const handleDelete = async () => {
+        if (window.confirm("Bạn có chắc chắn muốn xoá bài viết này?")) {
+            try {
+                await api.deletePost(post._id);
+                onClose();
+                window.location.reload();
+            } catch (err) {
+                console.error(err);
+                alert("Không thể xoá bài viết.");
+            }
+        }
+    };
+    // -------------------------------
+
+    // Xác định đường dẫn Profile của chủ bài viết
+    const authorId = post.user?._id || post.user;
+    const authorProfilePath = currentUser?._id === authorId ? '/profile' : `/profile/${authorId}`;
+
+    useEffect(() => {
+        setComments(post.comments || []);
+        setLikes(post.likes || []);
+    }, [post]);
 
     const handleLike = async () => {
         try {
@@ -53,26 +69,11 @@ export default function PostModal({ post, onClose }) {
         finally { setIsSubmitting(false); }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm("Are you sure you want to delete this masterpiece?")) {
-            try {
-                await api.deletePost(post._id);
-                onClose(); // Đóng modal
-                window.location.reload(); // Refresh để cập nhật dữ liệu
-            } catch (err) {
-                alert("Failed to delete post. Please try again.");
-            }
-        }
-    };
-
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
-            {/* Nút đóng Modal lớn */}
-            <button onClick={onClose} className="absolute top-5 right-5 text-white/40 hover:text-pix-gold transition-all z-50">
-                <X size={35} />
-            </button>
+            <button onClick={onClose} className="absolute top-5 right-5 text-white/40 hover:text-pix-gold transition-all"><X size={35} /></button>
             
-            <div className="bg-pix-black w-full max-w-6xl h-[85vh] rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row border border-white/10 shadow-2xl relative">
+            <div className="bg-pix-black w-full max-w-6xl h-[85vh] rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row border border-white/10 shadow-2xl">
                 
                 {/* BÊN TRÁI: CAROUSEL ẢNH */}
                 <div className="relative hidden md:flex md:w-3/5 bg-black border-r border-white/5 items-center justify-center overflow-hidden">
@@ -91,72 +92,65 @@ export default function PostModal({ post, onClose }) {
 
                 {/* BÊN PHẢI: INFO & COMMENTS */}
                 <div className="w-full md:w-2/5 flex flex-col bg-pix-dark">
-                    
-                    {/* Header: User Info & Dấu 3 chấm */}
-                    <div className="p-4 border-b border-white/5 flex items-center justify-between relative">
+                    {/* Header người đăng - ĐÃ THÊM NÚT 3 CHẤM Ở ĐÂY */}
+                    <div className="p-4 border-b border-white/5 flex items-center justify-between">
                         <Link to={authorProfilePath} onClick={onClose} className="flex items-center gap-3 group">
                             <img src={post.user?.avatar} className="w-9 h-9 rounded-full border border-pix-gold/30 object-cover" alt="" />
                             <span className="font-bold text-white text-sm group-hover:text-pix-gold transition-colors">{post.user?.username}</span>
                         </Link>
 
-                        {/* Nút 3 chấm & Bảng chọn Delete */}
+                        {/* NÚT 3 CHẤM */}
                         <div className="relative" ref={menuRef}>
-                            <button 
-                                onClick={() => setShowMenu(!showMenu)}
-                                className="text-pix-gray hover:text-white transition-colors p-2"
-                            >
-                                <MoreHorizontal size={24} />
+                            <button onClick={() => setShowMenu(!showMenu)} className="text-pix-gray hover:text-white p-2">
+                                <MoreHorizontal size={20} />
                             </button>
 
                             {showMenu && (
-                                <div className="absolute right-0 mt-2 w-48 bg-pix-black border border-white/10 rounded-2xl shadow-2xl z-[700] overflow-hidden animate-in zoom-in-95 duration-200">
+                                <div className="absolute right-0 mt-2 w-40 bg-pix-black border border-white/10 rounded-xl shadow-xl z-10 overflow-hidden">
                                     {isAuthor ? (
-                                        <button 
-                                            onClick={handleDelete}
-                                            className="w-full px-4 py-4 text-left text-red-500 hover:bg-red-500/10 flex items-center gap-3 text-xs font-black uppercase tracking-widest transition-all"
-                                        >
-                                            <Trash2 size={16} /> Delete Post
+                                        <button onClick={handleDelete} className="w-full px-4 py-3 text-left text-red-500 hover:bg-white/5 flex items-center gap-2 text-xs font-bold uppercase tracking-tighter">
+                                            <Trash2 size={14} /> Delete Post
                                         </button>
                                     ) : (
-                                        <button className="w-full px-4 py-4 text-left text-pix-gray hover:bg-white/5 text-xs font-black uppercase tracking-widest transition-all">
-                                            Report Post
+                                        <button className="w-full px-4 py-3 text-left text-pix-gray hover:bg-white/5 text-xs font-bold uppercase tracking-tighter">
+                                            Report
                                         </button>
                                     )}
-                                    <button 
-                                        onClick={() => setShowMenu(false)}
-                                        className="w-full px-4 py-4 text-left text-white/50 hover:bg-white/5 text-xs font-black uppercase tracking-widest border-t border-white/5 transition-all"
-                                    >
-                                        Cancel
-                                    </button>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Danh sách bình luận (Giữ nguyên logic cũ của bạn) */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                        {/* Caption gốc */}
                         <div className="flex gap-3 mb-6">
                             <Link to={authorProfilePath} onClick={onClose}>
                                 <img src={post.user?.avatar} className="w-8 h-8 rounded-full flex-shrink-0 object-cover" alt="" />
                             </Link>
                             <div className="text-sm">
-                                <Link to={authorProfilePath} onClick={onClose} className="font-bold text-white mr-2 hover:text-pix-gold">{post.user?.username}</Link>
+                                <Link to={authorProfilePath} onClick={onClose} className="font-bold text-white mr-2 hover:text-pix-gold">
+                                    {post.user?.username}
+                                </Link>
                                 <span className="text-white/80">{post.caption}</span>
                             </div>
                         </div>
 
+                        {/* List bình luận */}
                         {comments.map((c, i) => {
                             const commenterId = c.user?._id || c.user;
                             const commenterPath = currentUser?._id === commenterId ? '/profile' : `/profile/${commenterId}`;
+
                             return (
-                                <div key={i} className="flex gap-3">
+                                <div key={i} className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
                                     <Link to={commenterPath} onClick={onClose}>
                                         <div className="w-8 h-8 rounded-full bg-pix-gold/10 flex items-center justify-center text-[10px] text-pix-gold font-bold flex-shrink-0">
                                             {(c.user?.username || 'U').charAt(0).toUpperCase()}
                                         </div>
                                     </Link>
                                     <div className="text-sm">
-                                        <Link to={commenterPath} onClick={onClose} className="font-bold text-white mr-2 hover:text-pix-gold">{c.user?.username}</Link>
+                                        <Link to={commenterPath} onClick={onClose} className="font-bold text-white mr-2 hover:text-pix-gold">
+                                            {c.user?.username}
+                                        </Link>
                                         <span className="text-white/70">{c.text}</span>
                                     </div>
                                 </div>

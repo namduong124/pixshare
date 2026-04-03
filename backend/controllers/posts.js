@@ -86,19 +86,19 @@ export const likePost = async (req, res) => {
 };
 
 export const deletePost = async (req, res) => {
-    const { id } = req.params; // ID của bài viết cần xóa
+    const { id } = req.params; 
     try {
         const post = await Post.findById(id);
 
-        if (!post) return res.status(404).json({ message: "Không tìm thấy bài viết." });
+        if (!post) return res.status(404).json({ message: "Post not found" });
 
-        // KIỂM TRA QUYỀN: req.user.id lấy từ middleware verifyToken
-        if (post.user.toString() !== req.user.id) {
-            return res.status(403).json({ message: "Bạn không có quyền xóa bài viết của người khác." });
+        // Dùng req.userId vì middleware của bạn gán vào đó
+        if (post.user.toString() !== req.userId) {
+            return res.status(403).json({ message: "Unauthorized to delete this post" });
         }
 
         await Post.findByIdAndDelete(id);
-        res.status(200).json({ message: "Xóa bài viết thành công." });
+        res.status(200).json({ message: "Post deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
