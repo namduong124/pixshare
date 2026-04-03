@@ -7,7 +7,6 @@ const router = express.Router();
 router.get('/search', searchUsers);
 
 
-// Thứ tự: Check Token -> Nhận File -> Đẩy lên Cloudinary -> Cập nhật DB
 router.patch(
   '/profile', 
   verifyToken, 

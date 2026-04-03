@@ -12,7 +12,6 @@ export default function PostModal({ post, onClose }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentImg, setCurrentImg] = useState(0);
     
-    // --- PHẦN THÊM MỚI: Logic xoá ---
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef();
     const isAuthor = currentUser?._id === (post.user?._id || post.user);
@@ -39,7 +38,7 @@ export default function PostModal({ post, onClose }) {
             }
         }
     };
-    // -------------------------------
+
 
     // Xác định đường dẫn Profile của chủ bài viết
     const authorId = post.user?._id || post.user;
