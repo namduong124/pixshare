@@ -84,3 +84,22 @@ export const likePost = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const deletePost = async (req, res) => {
+    const { id } = req.params; // ID của bài viết cần xóa
+    try {
+        const post = await Post.findById(id);
+
+        if (!post) return res.status(404).json({ message: "Không tìm thấy bài viết." });
+
+        // KIỂM TRA QUYỀN: req.user.id lấy từ middleware verifyToken
+        if (post.user.toString() !== req.user.id) {
+            return res.status(403).json({ message: "Bạn không có quyền xóa bài viết của người khác." });
+        }
+
+        await Post.findByIdAndDelete(id);
+        res.status(200).json({ message: "Xóa bài viết thành công." });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

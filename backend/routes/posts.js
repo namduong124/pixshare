@@ -1,6 +1,7 @@
 import express from 'express';
 import { verifyToken } from '../middleware/auth.js';
 import upload, { uploadToCloudinary } from '../middleware/cloudinary.js'; 
+import { deletePost } from '../controllers/posts.js';
 import { 
     getPosts, 
     createPost, 
@@ -43,5 +44,6 @@ router.post('/:id/commentPost', verifyToken, commentPost);
  * @desc    Like hoặc Unlike bài viết
  */
 router.patch('/:id/likePost', verifyToken, likePost);
+router.delete('/:id', verifyToken, deletePost);
 
 export default router;

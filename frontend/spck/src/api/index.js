@@ -32,5 +32,6 @@ export const updateProfile = (formData) => API.patch('/users/profile', formData,
 });
 
 export const searchUsers = (query) => API.get(`/users/search?query=${query}`);
+export const deletePost = (id) => API.delete(`/posts/${id}`);
 
 export default API;
